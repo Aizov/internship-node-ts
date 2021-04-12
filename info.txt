@@ -1,0 +1,46 @@
+Shops:
+    id,
+    name,
+    address
+
+[1, "Silpo", "Shevchenka 2"]
+[2, "ATB", "Pushkina 9"]
+[3, "Vilma", "Grushevskogo 3"]
+
+// IF many shops and many cashiers => when creating new user - add new field to Shops: users: with ids format '1|4|5'
+// to optimisate get users from once shop >> SEE CASHIERS EXP FORMAT
+
+Cashiers:
+    id,
+    name,
+    surname,
+    workExp:
+        Shop.id
+        time: years, mounts
+    exp,
+
+[1, Ivan, Shevchuk, '{id: 1, years: 4}|{id: 2, years: 1}']
+[2, Ivan, Aizov, '{id: 1, years: 1}|{id: 2, years: 1}']
+
+
+CashRegisters:
+    number,
+    date:
+
+    timeWork: 1 or 2
+
+            1: 7-00 - 23-00
+            2: 23-00 - 7-00
+
+    cashierID
+
+
+[1, 01.04.2021, CR number: 3, TW: 1, Cashier: 2]
+[2, 02.04.2021, CR number: 2, TW: 2, Cashier: 1]
+[3, 03.04.2021, CR number: 2, TW: 1, Cashier: 1]
+[4, 04.04.2021, CR number: 1, TW: 2, Cashier: 2]
+
+
+Table time registration
+
+
