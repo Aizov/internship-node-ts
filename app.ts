@@ -37,6 +37,34 @@ let tables = [
     }
 ]
 
+
+let shopsData = [
+    {id: 1, name: 'ATB', address: 'Vulicya 54',},
+    {id: 2, name: 'Vilma', address: 'DJjjdjj2',},
+    {id: 3, name: 'Fora', address: 'Foravulica',},
+    {id: 4, name: 'Silpo', address: 'Silpoooooo',},
+    {id: 5, name: 'Arsen', address: 'Shevchenka 99',}
+]
+
+let cashiersData = [
+    {
+        id: 1, name: 'Ivan', surname: 'Surname', age: 23,
+        ExpShop_1: 3,
+    },
+    {
+        id: 2, name: 'Andrei', surname: 'Serend', age: 41,
+        ExpShop_2: 3,
+        ExpShop_3: 2,
+        ExpShop_4: 2,
+    },
+    {
+        id: 3, name: 'Andreddddi', surname: 'Serxxxend', age: 35,
+        ExpShop_1: 4,
+        ExpShop_3: 1,
+    }
+]
+
+
 class App {
     private client: Pool
     private connected: boolean | undefined;
@@ -55,6 +83,8 @@ class App {
             this.connected = true
             await this.checkTables()
 
+            this.getTargetCashiers1()
+
 
         }).catch(e => console.error(e))
 
@@ -65,6 +95,30 @@ class App {
             // this.client.end().then(err => console.log('connection close'))
         })
 
+
+    }
+
+    getTargetCashiers1(){
+
+        let shopIDs: any = [1, 5] // ATB, Arsen
+
+        let exps: string[] = []
+        shopsData.forEach(shop => {
+            exps.push(`COALESCE(ExpShop_${shop.id}, 0)`)
+        })
+
+        let query = `
+            SELECT id, name
+            
+            FROM Cashiers
+            
+            WHERE ${shopIDs.map((element: string) => `ExpShop_${element} > 0`).join(' OR ')}
+            
+                GROUP BY ${exps.join(', ')}, id, name
+            HAVING 
+                SUM(${exps.join('+')}) > 5
+        `
+        console.log(query)
 
     }
 
@@ -82,39 +136,10 @@ class App {
         }
 
     }
+
     async checkTables (){
 
 
-        let shopsData = [
-            {
-                id: 1, name: 'ATB', address: 'Vulicya 54',
-            },
-            {
-                id: 2, name: 'Vilma', address: 'DJjjdjj2',
-            },
-            {
-                id: 3, name: 'Fora', address: 'Foravulica',
-            }
-        ]
-
-        let cashiersData = [
-            {
-                id: 1, name: 'Ivan', surname: 'Surname', age: 23,
-                ExpShop_2: 3,
-                ExpShop_3: 1,
-
-            },
-            {
-                id: 2, name: 'Andrei', surname: 'Serend', age: 41,
-                ExpShop_2: 3,
-                ExpShop_3: 2,
-            },
-            {
-                id: 3, name: 'Andreddddi', surname: 'Serxxxend', age: 35,
-                ExpShop_1: 4,
-                ExpShop_3: 1,
-            }
-        ]
 
         async function pushCashiers() {
             for (let i = 0; i < cashiersData.length; i++){
@@ -125,7 +150,7 @@ class App {
                 })
             }
         }
-        await pushCashiers()
+        // await pushCashiers()
 
 
 
@@ -147,7 +172,7 @@ class App {
 
             for (let i = 1; i < getRandomInt(1, 40); i++) {
 
-                date.setDate(date.getDate() - getRandomInt(1, 31))
+                date.setDate(date.getDate() + getRandomInt(1, 31))
                 let dateStr = date.toISOString();
 
                 cashRegistersData = [...cashRegistersData, {
