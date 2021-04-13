@@ -7,17 +7,18 @@ Shops:
 [2, "ATB", "Pushkina 9"]
 [3, "Vilma", "Grushevskogo 3"]
 
-// IF many shops and many cashiers => when creating new user - add new field to Shops: users: with ids format '1|4|5'
-// to optimisate get users from once shop >> SEE CASHIERS EXP FORMAT
 
 Cashiers:
     id,
     name,
     surname,
-    workExp:
-        Shop.id
-        time: years, mounts
-    exp,
+    ExpShop_1: 1year,
+    ExpShop_2: 2year,
+    ExpShop_3,
+
+    //workExp:
+      //  Shop.id
+      //  time: years, mounts
 
 [1, Ivan, Shevchuk, '{id: 1, years: 4}|{id: 2, years: 1}']
 [2, Ivan, Aizov, '{id: 1, years: 1}|{id: 2, years: 1}']

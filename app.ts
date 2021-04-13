@@ -30,8 +30,8 @@ class App {
         }).catch(e => console.error(e))
 
     }
-    dbQuery(query: string, cb: any){
-        this.client.query(query, (err, res) => {
+    async dbQuery(query: string, cb: any) {
+        await this.client.query(query, (err, res) => {
             cb(res)
             // this.client.end().then(err => console.log('connection close'))
         })
@@ -54,6 +54,49 @@ class App {
 
     }
     async checkTables (){
+
+        let tables = [
+            {
+                tablename: 'Cashiers',
+                fields: {
+                    id: 'integer',
+                    name: 'varchar',
+                    surname: 'varchar',
+                    age: 'int'
+                }
+            },
+        ]
+
+        let cashiersData = [
+            {
+                id: 1,
+                name: 'Ivan',
+                surname: 'Surname',
+                age: 23,
+                ExpShop_2: 3,
+
+            },
+            {
+                id: 2,
+                name: 'Vilma',
+                adress: 'DJjjdjj2',
+            }
+        ]
+
+        let shopsData = [
+            {
+                id: 1,
+                name: 'ATB',
+                adress: 'Vulicya',
+            },
+            {
+                id: 2,
+                name: 'Vilma',
+                adress: 'DJjjdjj2',
+            }
+        ]
+
+
         let query = `SELECT *
             FROM pg_catalog.pg_tables
             WHERE schemaname != 'pg_catalog' AND 
@@ -61,7 +104,7 @@ class App {
 
         app.dbQuery(query,async (res: any) => {
 
-            console.log(res.rows)
+            console.log('rows', res.rows)
             res.rows.forEach((row: any, index: number) => {
                 for (let i = tables.length-1; i > -1; i--){
                     if(row.tablename === tables[i].tablename){
@@ -73,12 +116,15 @@ class App {
             for (let i = 0; i < tables.length; i++){
                 const table = tables[i];
                 console.log(table.tablename)
-                // await app.dbQuery(create(table),(res: any) => {
-                //     console.log(res)
-                // })
+                await app.dbQuery(create(table),(res: any) => {
+                    console.log(res)
+                })
             }
 
+            addShopsIDsToCashiers()
+
         })
+
 
         function create(element: any){
             let str = ''
@@ -93,45 +139,33 @@ class App {
             query = `CREATE TABLE ${element.tablename}(
                 ${str}
             );`
-
             console.log(query)
+
             return query
         }
+
+        function addShopsIDsToCashiers(){
+            shopsData.forEach(shop => {
+                let query = `
+                    ALTER TABLE Cashiers
+                    add column ExpShop_${shop.id} bigint;`
+
+
+                app.dbQuery(query,(res: any) => {
+                    console.log(query)
+                    console.log(res)
+
+                })
+            })
+        }
+
 
     }
 
 }
 
 
-let tables = [
-    {
-        tablename: 'Cashiers',
-        fields: {
-            email: 'varchar',
-            firstName: 'varchar',
-            lastName: 'varchar',
-            age: 'int'
-        }
-    },
-    {
-        tablename: 'users7',
-        fields: {
-            email: 'varchar',
-            firstName: 'varchar',
-            lastName: 'varchar',
-            age: 'int'
-        }
-    },
-    {
-        tablename: 'users4',
-        fields: {
-            email: 'varchar',
-            firstName: 'varchar',
-            lastName: 'varchar',
-            age: 'int'
-        }
-    }
-]
+
 
 let dbData = {
     user: 'user',
@@ -143,29 +177,33 @@ let dbData = {
 
 let app = new App(dbData.user, dbData.host, dbData.database, dbData.password, dbData.port)
 // app.checkTables()
-// app.deleteTables()
 
 
 
 
 
 
-let query = `
-    CREATE TABLE users (
-        email varchar,
-        firstName varchar,
-        lastName varchar,
-        age int
-    );`
-
-query = `SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE table_schema='information_schema'`
-
+let query = `SELECT * FROM CASHIERS`
 query = `
-    SELECT *
-    FROM pg_catalog.pg_tables
-    WHERE schemaname != 'pg_catalog' AND 
-    schemaname != 'information_schema';
-`
+    INSERT INTO Cashiers(${Object.keys(tables[0].fields).join(',')})
+    VALUES ('1', 'Ivan', 'Shevchuk', 23);
+    `
+// query = `
+//     SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = 'cashiers';
+//     `
+
+
+app.dbQuery(query,(res: any) => {
+    console.log(query)
+    console.log(res.rows)
+
+
+
+    // app.deleteTables()
+
+})
+
+
 // interface users {
 //     email: 'varchar',
 //     firstName: 'varchar',
