@@ -31,6 +31,8 @@ let tables = [
         fields: {
             id: 'integer',
             number: 'integer',
+            shop: 'integer',
+            cashier: 'integer',
             date: 'date',
             timework: 'integer'
         }
@@ -39,28 +41,43 @@ let tables = [
 
 
 let shopsData = [
-    {id: 1, name: 'ATB', address: 'Vulicya 54',},
+    {id: 1, name: 'ATB', address: 'Shevchenka 100',},
     {id: 2, name: 'Vilma', address: 'DJjjdjj2',},
     {id: 3, name: 'Fora', address: 'Foravulica',},
     {id: 4, name: 'Silpo', address: 'Silpoooooo',},
-    {id: 5, name: 'Arsen', address: 'Shevchenka 99',}
+    {id: 5, name: 'Arsen', address: 'Chenava 99',}
 ]
 
 let cashiersData = [
     {
         id: 1, name: 'Ivan', surname: 'Surname', age: 23,
         ExpShop_1: 3,
+        ExpShop_2: 3,
     },
     {
         id: 2, name: 'Andrei', surname: 'Serend', age: 41,
         ExpShop_2: 3,
-        ExpShop_3: 2,
-        ExpShop_4: 2,
+        ExpShop_5: 2,
+        ExpShop_4: 1,
     },
     {
         id: 3, name: 'Andreddddi', surname: 'Serxxxend', age: 35,
         ExpShop_1: 4,
         ExpShop_3: 1,
+    },
+    {
+        id: 3, name: 'Mikola', surname: 'Mill', age: 32,
+        ExpShop_1: 4,
+        ExpShop_5: 2,
+        ExpShop_4: 4,
+    },
+    {
+        id: 3, name: 'Mikola', surname: 'Mill', age: 32,
+        ExpShop_1: 4,
+        ExpShop_2: 2,
+        ExpShop_4: 4,
+        ExpShop_5: 4,
+
     }
 ]
 
@@ -84,6 +101,7 @@ class App {
             await this.checkTables()
 
             this.getTargetCashiers1()
+            this.getTargetCashiers2()
 
 
         }).catch(e => console.error(e))
@@ -92,19 +110,18 @@ class App {
     async dbQuery(query: string, cb: any) {
         await this.client.query(query, (err, res) => {
             cb(res)
-            // this.client.end().then(err => console.log('connection close'))
         })
 
 
     }
 
-    getTargetCashiers1(){
+    async getTargetCashiers1() {
 
         let shopIDs: any = [1, 5] // ATB, Arsen
 
         let exps: string[] = []
         shopsData.forEach(shop => {
-            exps.push(`COALESCE(ExpShop_${shop.id}, 0)`)
+            exps.push(`ExpShop_${shop.id}`)
         })
 
         let query = `
@@ -116,12 +133,34 @@ class App {
             
                 GROUP BY ${exps.join(', ')}, id, name
             HAVING 
-                SUM(${exps.join('+')}) > 5
-        `
-        console.log(query)
+                SUM(${exps.map((element: string) => `COALESCE(${element}, 0)`).join('+')}) > 5`
+
+        console.log('query', query)
+
+        await app.dbQuery(query, async (res: any) => {
+            console.log('getTargetCashiers1', res)
+        })
+
 
     }
+    async getTargetCashiers2() {
+        for (let i = 0; i < shopsData.length; i++) {
+            if (shopsData[i].address === 'Shevchenka 100') {
 
+                let query = `SELECT id, number, shop, cashier, date, timework
+                    FROM Cashregisters
+                    WHERE shop = ${shopsData[i].id} AND mod(number, 2) <> 0 AND timework = 2
+                    AND EXTRACT(DOW FROM date) = 1`
+                console.log(query)
+
+                await app.dbQuery(query, async (res: any) => {
+                    console.log('getTargetCashiers2', res)
+                })
+
+                break
+            }
+        }
+    }
 
 
 
@@ -150,7 +189,9 @@ class App {
                 })
             }
         }
+
         // await pushCashiers()
+
 
 
 
@@ -161,36 +202,34 @@ class App {
                 return Math.floor(Math.random() * (max - min + 1)) + min;
             }
 
-            let cashRegistersData = [
-                {
-                    id: 1,
-                    number: 5,
-                    date: '2021-04-12T06:37:12.688Z',
-                    timework: 1
-                }
-            ]
+            let cashRegistersData: any = []
 
-            for (let i = 1; i < getRandomInt(1, 40); i++) {
+            for (let i = 0; i < 500; i++) {
 
                 date.setDate(date.getDate() + getRandomInt(1, 31))
                 let dateStr = date.toISOString();
-
+                console.log(i)
                 cashRegistersData = [...cashRegistersData, {
-                    id: cashRegistersData.length,
-                    number: i,
+                    id: i,
+                    number: getRandomInt(1, 10),
+                    shop: shopsData[getRandomInt(0, shopsData.length-1)].id,
+                    cashier: cashiersData[getRandomInt(0, cashiersData.length-1)].id,
                     date: dateStr,
                     timework: getRandomInt(1, 2)
                 }]
             }
+
+
             console.log(cashRegistersData)
 
-            for (let i = 0; i < cashRegistersData.length; i++) {
+
+            for (let i = 1; i < cashRegistersData.length; i++) {
                 await app.dbQuery(makePull('cashRegisters', cashRegistersData[i]), (res: any) => {
                     console.log(makePull('cashRegisters', cashRegistersData[i]))
                     console.log(res)
                 })
             }
-            //     DELETE FROM Cashiers
+            //     DELETE FROM cashregisters
 
         }
 
@@ -231,7 +270,9 @@ class App {
 
         // await pushCashRegistersData()
 
+
             //     DELETE FROM cashRegisters
+
 
 
 
@@ -252,6 +293,7 @@ class App {
                     }
                 }
             })
+
 
             for (let i = 0; i < tables.length; i++){
                 const table = tables[i];
